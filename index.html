@@ -1,0 +1,176 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extreme QR Generator</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    color:white;
+    text-align:center;
+}
+
+.container{
+    max-width:420px;
+    margin:20px auto;
+    background:#111827;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 0 15px rgba(0,0,0,0.5);
+}
+
+input,select{
+    width:90%;
+    padding:10px;
+    margin:6px 0;
+    border:none;
+    border-radius:8px;
+}
+
+button{
+    padding:10px;
+    margin:5px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.gen{background:#38bdf8;}
+.dl{background:#22c55e;}
+.clear{background:#ef4444;}
+
+#qrcode{
+    margin-top:15px;
+    background:white;
+    display:inline-block;
+    padding:10px;
+    border-radius:10px;
+}
+
+.history{
+    text-align:left;
+    margin-top:15px;
+    font-size:14px;
+    max-height:150px;
+    overflow:auto;
+}
+.item{
+    background:#1f2937;
+    padding:6px;
+    margin:4px 0;
+    border-radius:6px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>⚡ Extreme QR Generator</h2>
+
+<div class="container">
+
+    <select id="type">
+        <option value="text">Text / URL</option>
+        <option value="wifi">WiFi</option>
+    </select>
+
+    <input type="text" id="text" placeholder="Enter text or URL">
+
+    <input type="color" id="color" value="#000000">
+    <input type="color" id="bg" value="#ffffff">
+
+    <input type="number" id="size" placeholder="Size (default 200)" value="200">
+
+    <button class="gen" onclick="generate()">Generate QR</button>
+    <button class="dl" onclick="downloadQR()">Download</button>
+
+    <div id="qrcode"></div>
+
+    <div class="history">
+        <h4>History</h4>
+        <div id="history"></div>
+        <button class="clear" onclick="clearHistory()">Clear</button>
+    </div>
+</div>
+
+<script>
+let lastCanvas;
+
+function generate(){
+    let type = document.getElementById("type").value;
+    let text = document.getElementById("text").value;
+    let color = document.getElementById("color").value;
+    let bg = document.getElementById("bg").value;
+    let size = document.getElementById("size").value || 200;
+
+    if(text.trim() === ""){
+        alert("Input required");
+        return;
+    }
+
+    if(type === "wifi"){
+        text = "WIFI:T:WPA;S:"+text+";P:12345678;;";
+    }
+
+    document.getElementById("qrcode").innerHTML = "";
+
+    let qr = new QRCode(document.getElementById("qrcode"), {
+        text: text,
+        width: size,
+        height: size,
+        colorDark: color,
+        colorLight: bg
+    });
+
+    saveHistory(text);
+}
+
+function downloadQR(){
+    let img = document.querySelector("#qrcode img");
+    if(!img){
+        alert("Generate QR first");
+        return;
+    }
+
+    let link = document.createElement("a");
+    link.href = img.src;
+    link.download = "qr-code.png";
+    link.click();
+}
+
+function saveHistory(text){
+    let data = JSON.parse(localStorage.getItem("qrHistory") || "[]");
+    data.unshift(text);
+    localStorage.setItem("qrHistory", JSON.stringify(data));
+    loadHistory();
+}
+
+function loadHistory(){
+    let data = JSON.parse(localStorage.getItem("qrHistory") || "[]");
+    let box = document.getElementById("history");
+    box.innerHTML = "";
+
+    data.slice(0,10).forEach(t=>{
+        let div = document.createElement("div");
+        div.className = "item";
+        div.innerText = t;
+        box.appendChild(div);
+    });
+}
+
+function clearHistory(){
+    localStorage.removeItem("qrHistory");
+    loadHistory();
+}
+
+loadHistory();
+</script>
+
+</body>
+</html>
